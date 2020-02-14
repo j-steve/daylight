@@ -1,0 +1,37 @@
+{% extends '_layout.html' %}
+{% block content %}
+<!--<form>
+  <input type="email" name="email" autofocus />
+  <input type="password" name="password" />
+  <input type="submit" />
+  <div class="mdc-text-field">
+    <input type="text" id="my-text-field" class="mdc-text-field__input">
+    <label class="mdc-floating-label" for="my-text-field">Hint text</label>
+    <div class="mdc-line-ripple"></div>
+  </div>
+  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+  Button
+</button>
+</form>-->
+
+<form id="login" action="thanks.html" method="POST">
+  <h3 class="header">Login</h1>
+  <div class="input-field stage1-m">
+    <input id="email-m" type="text" class="stage1-m" name="username">
+    <label for="email-m" class="stage1">Email or Username</label>
+  </div>
+  <div class="input-field not-active stage2-m">
+    <input id="password-m" type="password" name="password">
+    <label for="password-m">Password</label>
+  </div>
+  <div class="spacer-1"></div>
+  <div class="row">
+    <div class="col s12">
+      <button class="btn waves-effect waves-light right" type="submit" name="action">
+        Submit
+        <i class="material-icons right">send</i>
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %}
