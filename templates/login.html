@@ -14,24 +14,35 @@
 </button>
 </form>-->
 
-<form id="login" action="thanks.html" method="POST">
-  <h3 class="header">Login</h1>
-  <div class="input-field stage1-m">
-    <input id="email-m" type="text" class="stage1-m" name="username">
-    <label for="email-m" class="stage1">Email or Username</label>
-  </div>
-  <div class="input-field not-active stage2-m">
-    <input id="password-m" type="password" name="password">
-    <label for="password-m">Password</label>
-  </div>
-  <div class="spacer-1"></div>
-  <div class="row">
-    <div class="col s12">
-      <button class="btn waves-effect waves-light right" type="submit" name="action">
-        Submit
-        <i class="material-icons right">send</i>
-      </button>
+        <!-- <div class="card-content white-text">
+          <span class="card-title">Card Title</span>
+          <p>I am a very simple card. I am good at containing small bits of information.
+          I am convenient because I require little markup to use effectively.</p>
+        </div>
+        <div class="card-action">
+          <a href="#">This is a link</a>
+          <a href="#">This is a link</a>
+        </div>
+      </div> -->
+<form id="login" action="thanks.html" method="POST" 
+      class="card blue-grey lighten-4">
+  <div class="card-content">
+    <h3 class="card-title blue-grey-text darken-4">Robinhood Login</h1>
+    <div class="input-field stage1-m">
+      <input id="email-m" type="text" class="stage1-m" name="username">
+      <label for="email-m" class="stage1">Email or Username</label>
     </div>
+    <div class="input-field not-active stage2-m">
+      <input id="password-m" type="password" name="password">
+      <label for="password-m">Password</label>
+    </div>
+  </div>
+  <div class="card-action">
+    <button class="btn waves-effect waves-light right" type="submit" name="action">
+      Submit
+      <i class="material-icons right">send</i>
+    </button>
+    <div style="clear:both"></div>
   </div>
 </form>
 {% endblock %}
