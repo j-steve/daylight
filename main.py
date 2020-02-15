@@ -10,8 +10,6 @@ def login():
 
 @app.route('/sms-code', methods=['POST'])
 def sms_code():
-  print('hiyaaa')
-  print(request.form)
   username = request.form['username']
   password = request.form['password']
   try:
@@ -39,12 +37,8 @@ def data():
   return render_template('data.html', transactions = transactions)
 
 @app.route('/')
-def hello_world():
+def home():
   return redirect(url_for('login'))
-  # result = '<table><tr><th>Price</th><th>Quantity</th><th>Date</th></tr>'
-  # for o in orders:
-  #   result += '<tr><td>{price}</td><td>{quantity}</td><td>{date}</td></tr>'.format(price=o.get('price', ''), quantity=o.get('quantity', ''), date=o.get('last_transaction_at', ''))
-  # return result + '</table>'
   return render_template('home.html')
 
 if __name__ == '__main__':
