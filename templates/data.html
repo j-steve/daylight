@@ -3,15 +3,19 @@
 <div id="data">
   <table class="striped">
     <tr>
-      <th>
-        Price
-      </th>
+      <th>Date</th>
+      <th>Symbol</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Type</th>
     </tr>
      {% for row in transactions %}
       <tr>
+        <td>{{ row['executions'] and row['executions'][0]['timestamp'] or '' }}</td>
+        <td>{{ row['symbol'] or '' }}</td>
         <td>{{ row['price'] or '' }}</td>
         <td>{{ row['quantity'] or '' }}</td>
-        <td>{{ row['date'] or '' }}</td>
+        <td>{{ row['side'] or ''}}
       </tr>
      {% endfor %}
   </table>

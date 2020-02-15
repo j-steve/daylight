@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request, url_for
 import robin_stocks
 import robin_auth
+import orders
 
 app = Flask('app')
 
@@ -36,10 +37,8 @@ def data():
   if not token:
     return redirect(url_for('login'))
   robin_auth.set_token(token)
-  transactions = robin_stocks.orders.get_all_orders()
-  print(transactions[0])
-  print(robin_stocks.orders.get_order_info(transactions[0]["id"]))
-  return render_template('data.html', transactions = transactions)
+  transactions = orders.parse(robin_stocks.orders.get_all_orders())
+  return render_template('data.html', transactions=transactions)
 
 @app.route('/')
 def home():
