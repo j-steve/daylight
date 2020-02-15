@@ -1,31 +1,42 @@
-from flask import Flask, redirect, render_template, url_for
-app = Flask('app')
-
+from flask import Flask, redirect, render_template, request, url_for
 import robin_stocks
+import robin_auth
 
-# password = input('Password: ')
-# robin_stocks.login('steve5805@gmail.com', password)
-# orders = robin_stocks.orders.get_all_orders()
+app = Flask('app')
 
 @app.route('/login')
 def login():
   return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
-def login_submit():
-  return redirect(url_for('sms_code'))
-
-@app.route('/sms-code')
+@app.route('/sms-code', methods=['POST'])
 def sms_code():
-  return render_template('sms_code.html')
+  print('hiyaaa')
+  print(request.form)
+  username = request.form['username']
+  password = request.form['password']
+  try:
+    requires_challenge, challenge_id = robin_auth.login(username, password)
+    if requires_challenge:
+      return render_template('sms_code.html', username = username, 
+                            password = password, challenge_id = challenge_id)
+    else:
+      return redirect(url_for('data'))
+  except robin_auth.AuthError as e:
+    return redirect(url_for('login'))
 
 @app.route('/sms-code', methods=['POST'])
-def sms_cod_submit():
+def sms_code_post():
+  robin_auth.send_challenge_response(
+    request.form['username'],
+    request.form['password'],
+    request.form['challenge_id'],
+    request.form['sms_code'])
   return redirect(url_for('data'))
 
-@app.route('/data')
+@app.route('/data',)
 def data():
-  return render_template('data.html', transactions = [{"price": 5}])
+  transactions = robin_stocks.orders.get_all_orders()
+  return render_template('data.html', transactions = transactions)
 
 @app.route('/')
 def hello_world():

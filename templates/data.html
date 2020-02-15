@@ -9,8 +9,9 @@
     </tr>
      {% for row in transactions %}
       <tr>
-        <td>{{ row["price"] }}
-        </td>
+        <td>{{ row['price'] or '' }}</td>
+        <td>{{ row['quantity'] or '' }}</td>
+        <td>{{ row['date'] or '' }}</td>
       </tr>
      {% endfor %}
   </table>

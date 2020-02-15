@@ -1,39 +1,16 @@
 {% extends '_layout.html' %}
 {% block content %}
-<!--<form>
-  <input type="email" name="email" autofocus />
-  <input type="password" name="password" />
-  <input type="submit" />
-  <div class="mdc-text-field">
-    <input type="text" id="my-text-field" class="mdc-text-field__input">
-    <label class="mdc-floating-label" for="my-text-field">Hint text</label>
-    <div class="mdc-line-ripple"></div>
-  </div>
-  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-  Button
-</button>
-</form>-->
-
-        <!-- <div class="card-content white-text">
-          <span class="card-title">Card Title</span>
-          <p>I am a very simple card. I am good at containing small bits of information.
-          I am convenient because I require little markup to use effectively.</p>
-        </div>
-        <div class="card-action">
-          <a href="#">This is a link</a>
-          <a href="#">This is a link</a>
-        </div>
-      </div> -->
-<form id="login" method="POST" class="card lighten-4">
+<form id="login" action="/sms-code" method="POST" 
+      class="card lighten-4">
   <div class="card-content">
     <h3 class="card-title teal-text">Robinhood Login</h1>
     <div class="input-field stage1-m">
-      <input id="email-m" type="text" class="stage1-m" name="username">
+      <input id="email-m" type="text" class="stage1-m" name="username" required>
       <label for="email-m" class="stage1">Email or Username</label>
     </div>
     <div class="input-field not-active stage2-m">
-      <input id="password-m" type="password" name="password">
-      <label for="password-m">Password</label>
+      <input id="password" type="password" name="password" required>
+      <label for="password">Password</label>
     </div>
   </div>
   <div class="card-action">

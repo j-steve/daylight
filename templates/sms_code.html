@@ -1,11 +1,15 @@
 {% extends '_layout.html' %}
 {% block content %}
-<form id="login" method="POST" class="card lighten-4">
+<form id="login" action="/sms-code" method="POST" class="card lighten-4">
+  <input type="hidden" name="username" value="{{ username }}">
+  <input type="hidden" name="password" value="{{ password }}">
+  <input type="hidden" name="challenge_id" value="{{ challenge_id }}">
   <div class="card-content">
     <h3 class="card-title teal-text">SMS Code Verification</h1>
     <div class="input-field stage1-m">
-      <input id="sms-code" type="text" class="stage1-m" name="sms-code">
-      <label for="sms-code" class="stage1">Email or Username</label>
+      <input id="sms-code" type="number" class="stage1-m" name="sms_code"
+             autocomplete="off" required>
+      <label for="sms-code" class="stage1">SMS Code</label>
     </div>
   </div>
   <div class="card-action">
