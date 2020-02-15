@@ -8,32 +8,37 @@ app = Flask('app')
 def login():
   return render_template('login.html')
 
-@app.route('/sms-code', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def sms_code():
   username = request.form['username']
   password = request.form['password']
   try:
-    requires_challenge, challenge_id = robin_auth.login(username, password)
-    if requires_challenge:
-      return render_template('sms_code.html', username = username, 
-                            password = password, challenge_id = challenge_id)
+    token, challenge_id = robin_auth.login(username, password)
+    if token:
+      return redirect(url_for('data', token=token))
     else:
-      return redirect(url_for('data'))
+      return render_template('sms_code.html', username=username, password=password, challenge_id=challenge_id)
   except robin_auth.AuthError as e:
     return redirect(url_for('login'))
 
 @app.route('/sms-code', methods=['POST'])
 def sms_code_post():
-  robin_auth.send_challenge_response(
+  token = robin_auth.send_challenge_response(
     request.form['username'],
     request.form['password'],
     request.form['challenge_id'],
     request.form['sms_code'])
-  return redirect(url_for('data'))
+  return redirect(url_for('data', token=token))
 
 @app.route('/data',)
 def data():
+  token = request.args.get('token', None)
+  if not token:
+    return redirect(url_for('login'))
+  robin_auth.set_token(token)
   transactions = robin_stocks.orders.get_all_orders()
+  print(transactions[0])
+  print(robin_stocks.orders.get_order_info(transactions[0]["id"]))
   return render_template('data.html', transactions = transactions)
 
 @app.route('/')

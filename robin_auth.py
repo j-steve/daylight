@@ -21,17 +21,16 @@ def _post_to_login(username, password, challenge_type='sms'):
 
 def _save_credentials(data):
     token = '{0} {1}'.format(data['token_type'], data['access_token'])
-    helper.update_session('Authorization', token)
-    helper.set_login_state(True)
+    set_token(token)
+    return token
 
 def login(username, password, challenge_type = "sms"):
   data = _post_to_login(username, password)
   # Challenge type is used if not logging in with two-factor authentication.
   if 'challenge' in data:
-    return True, data['challenge']['id']
+    return None, data['challenge']['id']
   elif 'access_token' in data:
-    _save_credentials(data)
-    return False, None
+    return _save_credentials(data), None
   elif data.get('detail', None) == 'Unable to log in with provided credentials.':
     raise InvalidCredentialsError()
   else:
@@ -43,11 +42,14 @@ def send_challenge_response(username, password, challenge_id, sms_code):
   helper.update_session('X-ROBINHOOD-CHALLENGE-RESPONSE-ID', challenge_id)
   data = _post_to_login(username, password)
   if 'access_token' in data:
-    _save_credentials(datA)
+    return _save_credentials(data)
   else:
     print(data)
     raise AuthError(data)
 
+def set_token(token):
+  helper.update_session('Authorization', token)
+  helper.set_login_state(True)
 
 
 class AuthError(Exception):
