@@ -1,0 +1,18 @@
+{% extends '_layout.html' %}
+{% block content %}
+<div id="data">
+  <table class="striped">
+    <tr>
+      <th>
+        Price
+      </th>
+    </tr>
+     {% for row in transactions %}
+      <tr>
+        <td>{{ row["price"] }}
+        </td>
+      </tr>
+     {% endfor %}
+  </table>
+</div>
+{% endblock %}

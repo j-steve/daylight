@@ -1,0 +1,19 @@
+{% extends '_layout.html' %}
+{% block content %}
+<form id="login" method="POST" class="card lighten-4">
+  <div class="card-content">
+    <h3 class="card-title teal-text">SMS Code Verification</h1>
+    <div class="input-field stage1-m">
+      <input id="sms-code" type="text" class="stage1-m" name="sms-code">
+      <label for="sms-code" class="stage1">Email or Username</label>
+    </div>
+  </div>
+  <div class="card-action">
+    <button class="btn waves-effect waves-light right" type="submit" name="action">
+      Submit
+      <i class="material-icons right">send</i>
+    </button>
+    <div style="clear:both"></div>
+  </div>
+</form>
+{% endblock %}
