@@ -4,18 +4,22 @@
   <table class="striped">
     <tr>
       <th>Date</th>
-      <th>Symbol</th>
-      <th>Price</th>
-      <th>Quantity</th>
       <th>Type</th>
+      <th>Symbol</th>
+      <th>Quantity</th>
+      <th>Share Price</th>
+      <th>Total Price</th>
+      <th>Fees</th>
     </tr>
      {% for row in transactions %}
       <tr>
-        <td>{{ row['executions'] and row['executions'][0]['timestamp'] or '' }}</td>
-        <td>{{ row['symbol'] or '' }}</td>
-        <td>{{ row['price'] or '' }}</td>
-        <td>{{ row['quantity'] or '' }}</td>
-        <td>{{ row['side'] or ''}}
+        <td>{{ row.timestamp or '' }}</td>
+        <td>{{ row.type or ''}}</td>
+        <td>{{ row.symbol or '' }}</td>
+        <td>{{ row.quantity or '' }}</td>
+        <td>{{ row.share_price }}</td>
+        <td>{{ row.total_price }}</td>
+        <td>{{ row.fees }}</td>
       </tr>
      {% endfor %}
   </table>
