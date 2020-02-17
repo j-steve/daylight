@@ -10,6 +10,7 @@
       <th>Share Price</th>
       <th>Total Price</th>
       <th>Fees</th>
+      <td>Profit</td>
     </tr>
      {% for row in transactions %}
       <tr>
@@ -20,6 +21,7 @@
         <td>{{ row.share_price }}</td>
         <td>{{ row.total_price }}</td>
         <td>{{ row.fees }}</td>
+        <td>{{ row.profit or ''}}</td>
       </tr>
      {% endfor %}
   </table>
