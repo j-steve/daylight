@@ -1,12 +1,17 @@
 import robin_stocks
 from collections import defaultdict
+import sqlite3
 
 def parse(order_data):
   orders = []
   for order in order_data:
     if order['state'] != 'filled':
       continue
-    instrument = robin_stocks.helper.request_get(order['instrument'])
+    
+    instrument = None
+    with sqlite3.connect('daylight.db') as db_conn:
+      db_conn.row_factory = sqlite3.Row
+      instrument = _load_instrument(db_conn, order['instrument'])
     for execution in order['executions']:
       orders.append(Order(order, execution, instrument))
   # Compute profit/loss for each sale.
@@ -24,6 +29,19 @@ def parse(order_data):
           # a free robinhood stock.
           o.profit -= transactions[o.symbol].pop(-1)
   return orders
+
+def _load_instrument(db_conn, url):
+  cursor = db_conn.cursor()
+  cursor.execute('CREATE TABLE IF NOT EXISTS Instruments(url TEXT PRIMARY KEY NOT NULL, symbol VARCHAR(5) NOT NULL)')
+  cursor.execute('SELECT symbol FROM Instruments WHERE url = "{}"'.format(url))
+  result = cursor.fetchall()
+  if result:
+    return result[0]
+  else:
+    instrument = robin_stocks.helper.request_get(url)
+    cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(url, instrument['symbol']))
+    return instrument
+
 
 class Order(object):
   def __init__(self, order, execution, instrument):
