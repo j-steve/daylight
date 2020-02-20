@@ -19,7 +19,7 @@ def sms_code():
       return redirect(url_for('data', token=token))
     else:
       return render_template('sms_code.html', username=username, password=password, challenge_id=challenge_id)
-  except robin_auth.AuthError as e:
+  except robin_auth.AuthError:
     return redirect(url_for('login'))
 
 @app.route('/sms-code', methods=['POST'])
