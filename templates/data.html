@@ -10,10 +10,12 @@
       <th>Share Price</th>
       <th>Total Price</th>
       <th>Fees</th>
-      <td>Profit</td>
-      <td>Dividend</td>
-      <td>Total Profit per Dollar</td>
-      <td>Total Profit per Dollar Per Day</td>
+      <th>Profit</th>
+      <th>Dividend</th>
+      <th>Total Profit per Dollar</th>
+      <th>Total Profit per Dollar Per Day</th>
+      <th>Avg Days</th>
+      <th>Last Sale</th>
     </tr>
      {% for row in transactions %}
       <tr>
@@ -24,10 +26,12 @@
         <td>{{ row.share_price | currency_format}}</td>
         <td>{{ row.total_price | currency_format}}</td>
         <td>{{ row.fees | currency_format}}</td>
-        <td>{{ row.profit | currency_format}}</td>
+        <td>{{ row.sale_profit() | currency_format}}</td>
         <td>{{ row.dividend_profit | currency_format }}</td>
-        <td>{{ row.total_profit_per_dollar | cents_whole }}</td>
-        <td>{{ row.total_profit_per_dollar_per_day | cents }}</td>
+        <td>{{ row.total_profit_per_dollar() | percent }}</td>
+        <td>{{ (row.total_profit_per_dollar_per_day() * 365.25) | percent }}</td>
+        <td>{{ row.average_days() or '' }}</td>
+        <td>{{ row.last_sale_date() or '' }}</td>
       </tr>
      {% endfor %}
   </table>
