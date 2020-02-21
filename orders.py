@@ -1,5 +1,6 @@
-import robin_stocks
 from collections import defaultdict
+import datetime
+import robin_stocks
 import sqlite3
 
 def parse(order_data):
@@ -39,7 +40,8 @@ def parse(order_data):
             current_share_price = robin_stocks.stocks.get_latest_price(o.symbol)[0]
           o.profit += float(current_share_price)
         for dividend in dividends:
-          if o.instrument_url == dividend['instrument'] and o.timestamp < dividend['record_date'] and (not sale or sale.timestamp > dividend['record_date']):
+          dividend_date = datetime.datetime.strptime(dividend['record_date'], '%Y-%m-%d')
+          if o.instrument_url == dividend['instrument'] and o.timestamp < dividend_date and (not sale or sale.timestamp > dividend_date):
             o.dividend_profit += float(dividend['rate'])
 
   return orders
@@ -66,9 +68,19 @@ class Order(object):
     self.total_price = self.quantity * self.share_price
     self.fees = float(order['fees']) / int(float(order['quantity']))
     self.type = order['side'] # buy or sell
-    self.timestamp = execution['timestamp'] or None
+    self.timestamp = self._parse_datetime(execution['timestamp'])
     if self.type == 'sell':
       self.fees_computed = 0.00002 * self.total_price + 0.000119 * self.quantity + 0.02
       self.fees_computed = round(self.fees_computed, 2)
     self.profit = None
     self.dividend_profit = None
+
+  def _parse_datetime(self, date_string):
+    try:
+      return datetime.datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except ValueError:
+      return datetime.datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+
+  def total_profit_per_dollar(self):
+    if self.type == 'buy':
+      return (self.profit + self.dividend_profit) / self.total_price

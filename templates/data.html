@@ -12,6 +12,7 @@
       <th>Fees</th>
       <td>Profit</td>
       <td>Dividend</td>
+      <td>Total Profit per Dollar</td>
     </tr>
      {% for row in transactions %}
       <tr>
@@ -24,6 +25,7 @@
         <td>{{ row.fees | currency_format}}</td>
         <td>{{ row.profit | currency_format}}</td>
         <td>{{ row.dividend_profit | currency_format }}</td>
+        <td>{{ row.total_profit_per_dollar() | currency_format }}</td>
       </tr>
      {% endfor %}
   </table>
