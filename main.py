@@ -5,6 +5,12 @@ import orders
 
 app = Flask('app')
 
+@app.template_filter()
+def currency_format(value):
+    if not value: return ''
+    value = float(value)
+    return "${:,.2f}".format(value)
+
 @app.route('/login')
 def login():
   return render_template('login.html')

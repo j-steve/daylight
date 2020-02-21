@@ -11,6 +11,7 @@
       <th>Total Price</th>
       <th>Fees</th>
       <td>Profit</td>
+      <td>Dividend</td>
     </tr>
      {% for row in transactions %}
       <tr>
@@ -18,10 +19,11 @@
         <td>{{ row.type or ''}}</td>
         <td>{{ row.symbol or '' }}</td>
         <td>{{ row.quantity or '' }}</td>
-        <td>{{ row.share_price }}</td>
-        <td>{{ row.total_price }}</td>
-        <td>{{ row.fees }}</td>
-        <td>{{ row.profit or ''}}</td>
+        <td>{{ row.share_price | currency_format}}</td>
+        <td>{{ row.total_price | currency_format}}</td>
+        <td>{{ row.fees | currency_format}}</td>
+        <td>{{ row.profit | currency_format}}</td>
+        <td>{{ row.dividend_profit | currency_format }}</td>
       </tr>
      {% endfor %}
   </table>
