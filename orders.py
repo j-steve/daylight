@@ -27,23 +27,35 @@ def parse(order_data):
       for i in range(o.quantity):
         transactions[o.symbol].append(o)
     elif o.type == 'buy':
-      o.profit = 0 - o.total_price
+      o.profit = 0
       o.dividend_profit = 0
+      sale_transactions = []
+      sale_time = None
       current_share_price = None
       for i in range(o.quantity):
+        dividend_profit = 0
+        share_profit = 0 - o.share_price
         sale = None
         if transactions[o.symbol]:
           sale = transactions[o.symbol].pop(-1)
-          o.profit += sale.share_price - sale.fees
+          share_profit += sale.share_price - sale.fees
+          sale_time = sale.timestamp
         else:
           if not current_share_price:
             current_share_price = robin_stocks.stocks.get_latest_price(o.symbol)[0]
-          o.profit += float(current_share_price)
+          share_profit += float(current_share_price)
+          sale_time = datetime.datetime.now()
         for dividend in dividends:
           dividend_date = datetime.datetime.strptime(dividend['record_date'], '%Y-%m-%d')
           if o.instrument_url == dividend['instrument'] and o.timestamp < dividend_date and (not sale or sale.timestamp > dividend_date):
-            o.dividend_profit += float(dividend['rate'])
-
+            dividend_profit = float(dividend['rate'])
+        o.profit += share_profit
+        o.dividend_profit += dividend_profit
+        held_days = (sale_time - o.timestamp).total_seconds() / 60 / 24
+        sale_transactions.append((share_profit + dividend_profit) / o.share_price / held_days)
+      print(sale_transactions)
+      o.total_profit_per_dollar = o.profit / o.total_price
+      o.total_profit_per_dollar_per_day = sum(sale_transactions)
   return orders
 
 def _load_instrument(db_conn, url):
@@ -74,13 +86,12 @@ class Order(object):
       self.fees_computed = round(self.fees_computed, 2)
     self.profit = None
     self.dividend_profit = None
+    self.sale_transactions = None
+    self.total_profit_per_dollar = None
+    self.total_profit_per_dollar_per_day = None
 
   def _parse_datetime(self, date_string):
     try:
       return datetime.datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
     except ValueError:
       return datetime.datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
-
-  def total_profit_per_dollar(self):
-    if self.type == 'buy':
-      return (self.profit + self.dividend_profit) / self.total_price

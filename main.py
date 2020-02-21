@@ -11,6 +11,18 @@ def currency_format(value):
     value = float(value)
     return "${:,.2f}".format(value)
 
+@app.template_filter()
+def cents_whole(value):
+    if not value: return ''
+    value = float(value) * 100
+    return "{:,.0f}¢".format(value)
+
+@app.template_filter()
+def cents(value):
+    if not value: return ''
+    value = float(value) * 100
+    return "{:,.4f}¢".format(value)
+
 @app.route('/login')
 def login():
   return render_template('login.html')

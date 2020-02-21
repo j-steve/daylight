@@ -13,6 +13,7 @@
       <td>Profit</td>
       <td>Dividend</td>
       <td>Total Profit per Dollar</td>
+      <td>Total Profit per Dollar Per Day</td>
     </tr>
      {% for row in transactions %}
       <tr>
@@ -25,7 +26,8 @@
         <td>{{ row.fees | currency_format}}</td>
         <td>{{ row.profit | currency_format}}</td>
         <td>{{ row.dividend_profit | currency_format }}</td>
-        <td>{{ row.total_profit_per_dollar() | currency_format }}</td>
+        <td>{{ row.total_profit_per_dollar | cents_whole }}</td>
+        <td>{{ row.total_profit_per_dollar_per_day | cents }}</td>
       </tr>
      {% endfor %}
   </table>
