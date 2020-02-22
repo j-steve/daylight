@@ -1,5 +1,4 @@
 from flask import Flask, redirect, render_template, request, url_for
-import robin_stocks
 import robin_auth
 import orders
 
