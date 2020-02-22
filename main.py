@@ -55,7 +55,7 @@ def data():
   if not token:
     return redirect(url_for('login'))
   robin_auth.set_token(token)
-  transactions = orders.parse(robin_stocks.orders.get_all_orders())
+  transactions = orders.retrieve_all_orders()
   return render_template('data.html', transactions=transactions)
 
 @app.route('/')

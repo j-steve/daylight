@@ -3,35 +3,48 @@ from datetime import datetime
 import robin_stocks
 import sqlite3
 
-def parse(order_data):
-  orders = []
-  for order in order_data:
+def retrieve_all_orders():
+  orders = list(_load_stock_orders())
+  orders.sort(key=lambda x: x.timestamp, reverse=True)
+  _compute_profit(orders)
+  return orders
+
+def _load_stock_orders():
+  for order in robin_stocks.orders.get_all_orders():
     if order['state'] != 'filled':
       continue
-    
     instrument = None
     with sqlite3.connect('daylight.db') as db_conn:
       db_conn.row_factory = sqlite3.Row
       instrument = _load_instrument(db_conn, order['instrument'])
     for execution in order['executions']:
-      orders.append(Order(order, execution, instrument))
-  # Compute profit/loss for each sale.
+      yield Order(order, execution, instrument)
+
+def _load_instrument(db_conn, url):
+  cursor = db_conn.cursor()
+  cursor.execute('CREATE TABLE IF NOT EXISTS Instruments(url TEXT PRIMARY KEY NOT NULL, symbol VARCHAR(5) NOT NULL)')
+  cursor.execute('SELECT symbol FROM Instruments WHERE url = "{}"'.format(url))
+  result = cursor.fetchall()
+  if result:
+    return result[0]
+  else:
+    instrument = robin_stocks.helper.request_get(url)
+    cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(url, instrument['symbol']))
+    return instrument
+
+def _compute_profit(orders):
   dividends = robin_stocks.helper.request_get(
     robin_stocks.urls.dividends(), 'pagination')
-  orders.sort(key=lambda x: x.timestamp)
-  orders.reverse()
   transactions = defaultdict(lambda: [])
   for o in orders:
     if o.type == 'sell':
-          # May be no buy transaction, if this was a free robinhood stock.
+      # May be no buy transaction, if this was a free robinhood stock.
       for i in range(o.quantity):
         transactions[o.symbol].append(o)
     elif o.type == 'buy':
       o.dividend_profit = 0
       current_share_price = None
       for i in range(o.quantity):
-        dividend_profit = 0
-        share_profit = 0 - o.share_price
         sale = None
         if transactions[o.symbol]:
           sale = transactions[o.symbol].pop(-1)
@@ -45,21 +58,7 @@ def parse(order_data):
         for dividend in dividends:
           dividend_date = datetime.strptime(dividend['record_date'], '%Y-%m-%d')
           if o.instrument_url == dividend['instrument'] and o.timestamp < dividend_date and (not sale or sale.timestamp > dividend_date):
-            dividend_profit = float(dividend['rate'])
-        o.dividend_profit += dividend_profit
-  return orders
-
-def _load_instrument(db_conn, url):
-  cursor = db_conn.cursor()
-  cursor.execute('CREATE TABLE IF NOT EXISTS Instruments(url TEXT PRIMARY KEY NOT NULL, symbol VARCHAR(5) NOT NULL)')
-  cursor.execute('SELECT symbol FROM Instruments WHERE url = "{}"'.format(url))
-  result = cursor.fetchall()
-  if result:
-    return result[0]
-  else:
-    instrument = robin_stocks.helper.request_get(url)
-    cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(url, instrument['symbol']))
-    return instrument
+            o.dividend_profit += float(dividend['rate'])
 
 class Order(object):
   def __init__(self, order, execution, instrument):
