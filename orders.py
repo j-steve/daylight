@@ -1,10 +1,12 @@
 from collections import defaultdict
 from datetime import datetime
+import pytz
 import robin_stocks
 import sqlite3
 
 def retrieve_all_orders():
   orders = list(_load_stock_orders())
+  # orders.extend(_load_crypto_orders())
   orders.sort(key=lambda x: x.timestamp, reverse=True)
   _compute_profit(orders)
   return orders
@@ -18,7 +20,7 @@ def _load_stock_orders():
       db_conn.row_factory = sqlite3.Row
       instrument = _load_instrument(db_conn, order['instrument'])
     for execution in order['executions']:
-      yield Order(order, execution, instrument)
+      yield Execution(order, execution, instrument['symbol'])
 
 def _load_instrument(db_conn, url):
   cursor = db_conn.cursor()
@@ -32,6 +34,18 @@ def _load_instrument(db_conn, url):
     cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(url, instrument['symbol']))
     return instrument
 
+def _load_crypto_orders():
+  crypto_orders = robin_stocks.helper.request_get(
+    robin_stocks.urls.order_crypto(), 'pagination')
+  for order in crypto_orders:
+    order['instrument'] = order['currency_pair_id']
+    order['fees'] = 0
+    if order['state'] != 'filled':
+      continue
+    for execution in order['executions']:
+      execution['price'] = execution['effective_price']
+      yield Execution(order, execution, 'CRYPTO')
+
 def _compute_profit(orders):
   dividends = robin_stocks.helper.request_get(
     robin_stocks.urls.dividends(), 'pagination')
@@ -42,7 +56,6 @@ def _compute_profit(orders):
       for i in range(o.quantity):
         transactions[o.symbol].append(o)
     elif o.type == 'buy':
-      o.dividend_profit = 0
       current_share_price = None
       for i in range(o.quantity):
         sale = None
@@ -54,21 +67,21 @@ def _compute_profit(orders):
         else:
           if not current_share_price:
             current_share_price = float(robin_stocks.stocks.get_latest_price(o.symbol)[0])
-          o.add_sale(current_share_price, datetime.now())
+          o.add_sale(current_share_price, datetime.now(pytz.utc))
         for dividend in dividends:
-          dividend_date = datetime.strptime(dividend['record_date'], '%Y-%m-%d')
+          dividend_date = pytz.utc.localize(datetime.strptime(dividend['record_date'], '%Y-%m-%d'))
           if o.instrument_url == dividend['instrument'] and o.timestamp < dividend_date and (not sale or sale.timestamp > dividend_date):
             o.dividend_profit += float(dividend['rate'])
 
-class Order(object):
-  def __init__(self, order, execution, instrument):
-    self.id = order['id']
+class Execution(object):
+  def __init__(self, order, execution, symbol):
+    self.order_id = order['id']
     self.instrument_url = order['instrument']
-    self.symbol = instrument['symbol']
+    self.symbol = symbol
     self.quantity = int(float(execution['quantity']))
     self.share_price = float(execution['price'])
     self.total_price = self.quantity * self.share_price
-    self.fees = float(order['fees']) / int(float(order['quantity']))
+    self.fees = float(order['fees']) / float(order['quantity'])
     self.type = order['side'] # buy or sell
     self.timestamp = self._parse_datetime(execution['timestamp'])
     if self.type == 'sell':
@@ -80,9 +93,15 @@ class Order(object):
 
   def _parse_datetime(self, date_string):
     try:
-      return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+      return pytz.utc.localize(datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ'))
     except ValueError:
-      return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+      try:
+        return pytz.utc.localize(datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ'))
+      except ValueError:
+        try:
+          return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%f%z')
+        except ValueError:
+          return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S%z') 
 
   def add_sale(self, sale_amount, sale_timestamp):
     held_days = (sale_timestamp - self.timestamp).total_seconds() / 60  / 60 / 24
