@@ -4,7 +4,6 @@
   <table class="striped">
     <tr>
       <th>Date</th>
-      <th>Type</th>
       <th>Symbol</th>
       <th>Quantity</th>
       <th>Share Price</th>
@@ -13,25 +12,24 @@
       <th>Profit</th>
       <th>Dividend</th>
       <th>Total Profit per Dollar</th>
-      <th>Total Profit per Dollar Per Day</th>
+      <th>Total Profit per Dollar Per Year</th>
       <th>Avg Days</th>
       <th>Last Sale</th>
     </tr>
-     {% for row in transactions %}
+     {% for buy in transactions %}
       <tr>
-        <td>{{ row.timestamp or '' }}</td>
-        <td>{{ row.type or ''}}</td>
-        <td>{{ row.symbol or '' }}</td>
-        <td>{{ row.quantity or '' }}</td>
-        <td>{{ row.share_price | currency_format}}</td>
-        <td>{{ row.total_price | currency_format}}</td>
-        <td>{{ row.fees | currency_format}}</td>
-        <td>{{ row.sale_profit() | currency_format}}</td>
-        <td>{{ row.dividend_profit | currency_format }}</td>
-        <td>{{ row.total_profit_per_dollar() | percent }}</td>
-        <td>{{ (row.total_profit_per_dollar_per_day() * 365.25) | percent }}</td>
-        <td>{{ row.average_days() or '' }}</td>
-        <td>{{ row.last_sale_date() or '' }}</td>
+        <td>{{ buy.execution.timestamp or '' }}</td>
+        <td>{{ buy.execution.symbol or '' }}</td>
+        <td>{{ buy.execution.quantity or '' }}</td>
+        <td>{{ buy.execution.share_price | currency_format}}</td>
+        <td>{{ buy.execution.total_price | currency_format}}</td>
+        <td>{{ buy.sale_fees() | currency_format}}</td>
+        <td>{{ buy.sale_profit() | currency_format}}</td>
+        <td>{{ buy.dividend_earnings() | currency_format }}</td>
+        <td>{{ buy.total_profit_per_dollar() | percent }}</td>
+        <td>{{ (buy.total_profit_per_dollar_per_day() * 365.25) | percent }}</td>
+        <td>{{ buy.average_days() | round | int }}</td>
+        <td>{{ buy.last_sale_date() or '' }}</td>
       </tr>
      {% endfor %}
   </table>
