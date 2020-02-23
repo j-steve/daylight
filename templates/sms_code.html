@@ -1,6 +1,6 @@
 {% extends '_layout.html' %}
 {% block content %}
-<form id="login" action="/sms-code" method="POST" class="card lighten-4">
+<form id="login" action="{{ url_for('sms_code_post') }}" method="POST" class="card lighten-4">
   <input type="hidden" name="username" value="{{ username }}">
   <input type="hidden" name="password" value="{{ password }}">
   <input type="hidden" name="challenge_id" value="{{ challenge_id }}">

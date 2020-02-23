@@ -1,5 +1,8 @@
 {% extends '_layout.html' %}
 {% block content %}
+<div style="float:right; margin:5px;">
+  <a href="{{ url_for('logout') }}">Logout</a>
+</div>
 <div id="data">
   <table class="striped">
     <tr>

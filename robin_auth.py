@@ -7,10 +7,12 @@ import random
 import pickle
 import os
 
+TOKEN_DURATION = 86400
+
 def _post_to_login(username, password, challenge_type='sms'):
     payload = {
       'client_id': 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-      'expires_in': 86400,
+      'expires_in': TOKEN_DURATION,
       'grant_type': 'password',
       'password': password,
       'scope': 'internal',

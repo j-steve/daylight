@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, make_response, redirect, render_template, request, url_for
 import robin_auth
 import orders
 
@@ -27,13 +27,13 @@ def login():
   return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
-def sms_code():
+def login_post():
   username = request.form['username']
   password = request.form['password']
   try:
     token, challenge_id = robin_auth.login(username, password)
     if token:
-      return redirect(url_for('data', token=token))
+      return _redirect_with_token(token, 'data')
     else:
       return render_template('sms_code.html', username=username, password=password, challenge_id=challenge_id)
   except robin_auth.AuthError:
@@ -46,16 +46,27 @@ def sms_code_post():
     request.form['password'],
     request.form['challenge_id'],
     request.form['sms_code'])
-  return redirect(url_for('data', token=token))
+  return _redirect_with_token(token, 'data')
 
-@app.route('/data',)
+def _redirect_with_token(token, redirect_to):
+  resp = make_response(redirect(url_for('data')))
+  resp.set_cookie('token', token, max_age=robin_auth.TOKEN_DURATION)
+  return resp
+
+@app.route('/data')
 def data():
-  token = request.args.get('token', None)
+  token = request.cookies.get('token')
   if not token:
     return redirect(url_for('login'))
   robin_auth.set_token(token)
   transactions = orders.retrieve_all_orders()
   return render_template('data.html', transactions=transactions)
+
+@app.route('/logout',)
+def logout():
+  resp = make_response(redirect(url_for('login')))
+  resp.delete_cookie('token')
+  return resp
 
 @app.route('/')
 def home():
