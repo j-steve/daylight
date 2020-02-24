@@ -6,8 +6,8 @@
 <div id="data">
   <table class="striped">
     <tr>
-      <th>Date</th>
-      <th>Symbol</th>
+      <th scope="col">Date</th>
+      <th scope="col">Symbol</th>
       <th>Quantity</th>
       <th>Share Price</th>
       <th>Total Price</th>
@@ -21,18 +21,18 @@
     </tr>
      {% for buy in transactions %}
       <tr>
-        <td>{{ buy.execution.timestamp or '' }}</td>
-        <td>{{ buy.execution.symbol or '' }}</td>
-        <td>{{ buy.execution.quantity or '' }}</td>
-        <td>{{ buy.execution.share_price | currency_format}}</td>
-        <td>{{ buy.execution.total_price | currency_format}}</td>
-        <td>{{ buy.sale_fees() | currency_format}}</td>
-        <td>{{ buy.sale_profit() | currency_format}}</td>
-        <td>{{ buy.dividend_earnings() | currency_format }}</td>
-        <td>{{ buy.total_profit_per_dollar() | percent }}</td>
-        <td>{{ (buy.total_profit_per_dollar_per_day() * 365.25) | percent }}</td>
-        <td>{{ buy.average_days() | round | int }}</td>
-        <td>{{ buy.last_sale_date() or '' }}</td>
+        <td>{{ buy.execution.timestamp | format_date  }}</td>
+        <td class="text">{{ buy.execution.symbol or '' }}</td>
+        <td class="numeric">{{ buy.execution.quantity or '' }}</td>
+        <td class="numeric">{{ buy.execution.share_price | format_currency}}</td>
+        <td class="numeric">{{ buy.execution.total_price | format_currency}}</td>
+        <td class="numeric">{{ buy.sale_fees() | format_currency}}</td>
+        <td class="numeric">{{ buy.sale_profit() | format_currency}}</td>
+        <td class="numeric">{{ buy.dividend_earnings() | format_currency }}</td>
+        <td class="numeric">{{ buy.total_profit_per_dollar() | format_percent }}</td>
+        <td class="numeric">{{ (buy.total_profit_per_dollar_per_day() * 365.25) | format_percent }}</td>
+        <td class="numeric">{{ buy.average_days() | round | int }}</td>
+        <td>{{ buy.last_sale_date() | format_date }}</td>
       </tr>
      {% endfor %}
   </table>

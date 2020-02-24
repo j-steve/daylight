@@ -12,3 +12,13 @@
   width: 800px;
   margin: auto;
 }
+
+#data th, #data td {
+  text-align: center;
+}
+#data td {
+  white-space: nowrap;
+}
+#data td.numeric {
+  text-align: right;
+}

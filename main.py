@@ -5,22 +5,21 @@ import orders
 app = Flask('app')
 
 @app.template_filter()
-def currency_format(value):
-    if not value: return ''
-    value = float(value)
-    return "${:,.2f}".format(value)
+def format_currency(value):
+  if not value: return ''
+  value = float(value)
+  return "${:,.2f}".format(value)
 
 @app.template_filter()
-def percent(value):
-    if not value: return ''
-    value = float(value) * 100
-    return "{:,.0f}%".format(value)
+def format_percent(value):
+  if not value: return ''
+  value = float(value) * 100
+  return "{:,.0f}%".format(value)
 
 @app.template_filter()
-def cents(value):
-    if not value: return ''
-    value = float(value) * 100
-    return "{:,.3f}¢".format(value)
+def format_date(value):
+  if not value: return ''
+  return value.strftime('%Y-%m-%d')
 
 @app.route('/login')
 def login():
