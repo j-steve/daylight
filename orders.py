@@ -8,6 +8,7 @@ import sqlite3
 def retrieve_all_orders():
   orders = list(_load_stock_orders())
   orders.extend(_load_crypto_orders())
+  orders.extend(_load_option_orders())
   orders.sort(key=lambda x: x.timestamp, reverse=True)
   buys = _associate_buys_and_sells(orders)
   return buys
@@ -51,6 +52,14 @@ def _load_crypto_orders():
       execution['price'] = execution['effective_price']
       yield Execution(order, execution, currency_pairs[currency_pair_id], 'crypto')
 
+def _load_option_orders():
+  for option in robin_stocks.options.get_market_options():
+    for leg in option['legs']:
+      for execution in leg['executions']:
+        # TODO: yield Execution.
+        if False:
+          yield None
+
 def _associate_buys_and_sells(orders):
   dividends = Dividend.load_all()
   sales = defaultdict(lambda: [])
@@ -90,13 +99,19 @@ class Dividend(object):
     return list(map(lambda d: Dividend(d), response))
 
 class Sale(object):
-  def __init__(self, execution, quantity=None):
-    self.order_id = execution.order_id
-    self.quantity = execution.quantity if quantity is None else quantity
-    portion_of_parent = self.quantity / execution.quantity
-    self.fees = execution.fees * portion_of_parent
-    self.total_price = execution.total_price * portion_of_parent
-    self.timestamp = execution.timestamp
+  def __init__(self, parent, quantity=None):
+    """
+    Args:
+      parent (Sale, Execution): The original/parent entity.
+      quantity (float): The quantity for this Sale.  If not provided, defaults to parent.quantity.
+    """
+    assert isinstance(parent, (Sale, Execution)) 
+    self.order_id = parent.order_id
+    self.quantity = parent.quantity if quantity is None else quantity
+    portion_of_parent = self.quantity / parent.quantity
+    self.fees = parent.fees * portion_of_parent
+    self.total_price = parent.total_price * portion_of_parent
+    self.timestamp = parent.timestamp
 
 
 class Buy(object):
