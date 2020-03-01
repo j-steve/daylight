@@ -69,14 +69,15 @@ def _load_option_orders():
       continue
     for leg in option['legs']:
       for execution in leg['executions']:
-        if False:
-          yield Execution(
-            'option',
-            execution,
-            symbol=option['chain_symbol'],
-            order_id=option['id'],
-            buy_or_sell=leg['side'],
-            is_position_close=leg['position_effect'] == 'close')
+        execution['quantity'] = float(execution['quantity']) * 100
+        yield Execution(
+          'option',
+          execution,
+          symbol=option['chain_symbol'],
+          order_id=option['id'],
+          buy_or_sell=leg['side'],
+          is_position_close=leg['position_effect'] == 'close',
+          instrument_id=leg['option'])
 
 def _associate_buys_and_sells(orders):
   dividends = Dividend.load_all()
@@ -96,8 +97,12 @@ def _associate_buys_and_sells(orders):
       if buy.unsold_quantity:
         if execution.instrument_type == 'stock':
           buy.market_price = float(robin_stocks.stocks.get_latest_price(execution.symbol)[0])
-        else:
+        elif execution.instrument_type == 'crypto':
           buy.market_price = float(robin_stocks.crypto.get_crypto_quote(execution.symbol)['mark_price'])
+        else:
+          option_id = robin_stocks.helper.request_get(execution.instrument_id)['id']
+          market_data = robin_stocks.options.get_option_market_data_by_id(option_id)
+          buy.market_price = float(market_data['adjusted_mark_price'])
       if execution.instrument_type == 'stock':
         for dividend in dividends:
           buy.try_add_dividend(dividend)
