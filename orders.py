@@ -27,7 +27,8 @@ def _load_stock_orders(db_conn):
         execution,
         symbol=symbol,
         order_id=order['id'],
-        transaction_type=order['side'],
+        buy_or_sell=order['side'],
+        is_position_close=order['side'] == 'sell',
         instrument_id=order['instrument'],
         fees=float(order['fees']) / float(order['quantity']))
 
@@ -59,7 +60,8 @@ def _load_crypto_orders():
         execution, 
         symbol=currency_pairs[currency_pair_id], 
         order_id=order['id'],
-        transaction_type=order['side'])
+        buy_or_sell=order['side'],
+        is_position_close=order['side'] == 'sell')
 
 def _load_option_orders():
   for option in robin_stocks.options.get_market_options():
@@ -71,22 +73,20 @@ def _load_option_orders():
           yield Execution(
             'option',
             execution,
-            symbol=None,
+            symbol=option['chain_symbol'],
             order_id=option['id'],
-            transaction_type=None)
-          # TODO: yield Execution.
-          if False:
-            yield None
+            buy_or_sell=leg['side'],
+            is_position_close=leg['position_effect'] == 'close')
 
 def _associate_buys_and_sells(orders):
   dividends = Dividend.load_all()
   sales = defaultdict(lambda: [])
   for execution in orders:
-    print(execution.symbol, execution.type, execution.quantity)
+    print(execution.symbol, execution.buy_or_sell, execution.quantity)
     symbol_sales = sales[execution.symbol]
-    if execution.type == 'sell':
+    if execution.is_position_close:
       symbol_sales.append(Sale(execution))
-    elif execution.type == 'buy':
+    else:
       buy = Buy(execution)
       symbol_sales = sales[buy.execution.symbol]
       while buy.unsold_quantity and symbol_sales:

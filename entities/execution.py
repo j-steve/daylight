@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 
 class Execution(object):
-  def __init__(self, instrument_type, execution, symbol, order_id, transaction_type, instrument_id=None, fees=0):
+  def __init__(self, instrument_type, execution, symbol, order_id, buy_or_sell, is_position_close, instrument_id=None, fees=0):
     self.instrument_type = instrument_type
     self.timestamp = self._parse_datetime(execution['timestamp'])
     self.quantity = float(execution['quantity'])
@@ -10,7 +10,8 @@ class Execution(object):
     self.total_price = self.quantity * self.share_price
     self.order_id = order_id
     self.symbol = symbol
-    self.type = transaction_type # buy or sell
+    self.buy_or_sell = buy_or_sell # buy or sell
+    self.is_position_close = is_position_close
     self.fees = fees
     self.instrument_id = instrument_id
     # if self.type == 'sell':
