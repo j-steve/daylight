@@ -4,6 +4,7 @@ from datetime import datetime
 import pytz
 import robin_stocks
 import sqlite3
+from entities.execution import Execution
 
 def retrieve_all_orders():
   orders = list(_load_stock_orders())
@@ -22,7 +23,14 @@ def _load_stock_orders():
       db_conn.row_factory = sqlite3.Row
       instrument = _load_instrument(db_conn, order['instrument'])
     for execution in order['executions']:
-      yield Execution(order, execution, instrument['symbol'], 'stock')
+      yield Execution(
+        'stock',
+        execution,
+        symbol=instrument['symbol'],
+        order_id=order['id'],
+        transaction_type=order['side'],
+        instrument_url=order['instrument'],
+        fees=float(order['fees']) / float(order['quantity']))
 
 def _load_instrument(db_conn, url):
   cursor = db_conn.cursor()
@@ -40,25 +48,38 @@ def _load_crypto_orders():
   currency_pairs = {}
   for pair in robin_stocks.crypto.get_crypto_currency_pairs():
     currency_pairs[pair['id']] = pair['asset_currency']['code']
-  crypto_orders = robin_stocks.helper.request_get(
-    robin_stocks.urls.order_crypto(), 'pagination')
+  crypto_orders = robin_stocks.helper.request_get(robin_stocks.urls.order_crypto(), 'pagination')
   for order in crypto_orders:
-    currency_pair_id = order['currency_pair_id']
-    order['instrument'] = currency_pair_id
-    order['fees'] = 0
     if order['state'] != 'filled':
       continue
+    currency_pair_id = order['currency_pair_id']
     for execution in order['executions']:
       execution['price'] = execution['effective_price']
-      yield Execution(order, execution, currency_pairs[currency_pair_id], 'crypto')
+      yield Execution(
+        'crypto',
+        execution, 
+        symbol=currency_pairs[currency_pair_id], 
+        order_id=order['id'],
+        instrument_url=currency_pair_id,
+        transaction_type=order['side'])
 
 def _load_option_orders():
   for option in robin_stocks.options.get_market_options():
+    if option['state'] != 'filled':
+      continue
     for leg in option['legs']:
       for execution in leg['executions']:
-        # TODO: yield Execution.
         if False:
-          yield None
+          yield Execution(
+            'option',
+            execution,
+            symbol=None,
+            order_id=option['id'],
+            transaction_type=None, 
+            instrument_url=None)
+          # TODO: yield Execution.
+          if False:
+            yield None
 
 def _associate_buys_and_sells(orders):
   dividends = Dividend.load_all()
@@ -178,57 +199,3 @@ class Buy(object):
   # def unsold_quantity(self):
   #   """Returns the quantity purchased which has not (yet) been subsequently sold, if any."""
   #   return self.execution.quantity - sum(map(lambda s: s.quantity, self.sales))
-
-class Execution(object):
-  def __init__(self, order, execution, symbol, instrument_type):
-    self.order_id = order['id']
-    self.instrument_url = order['instrument']
-    self.instrument_type = instrument_type
-    self.symbol = symbol
-    self.quantity = float(execution['quantity'])
-    self.share_price = float(execution['price'])
-    self.total_price = self.quantity * self.share_price
-    self.fees = float(order['fees']) / float(order['quantity'])
-    self.type = order['side'] # buy or sell
-    self.timestamp = self._parse_datetime(execution['timestamp'])
-    # if self.type == 'sell':
-    #   self.fees_computed = 0.00002 * self.total_price + 0.000119 * self.quantity + 0.02
-    #   self.fees_computed = round(self.fees_computed, 2)
-
-  @staticmethod
-  def _parse_datetime(date_string):
-    try:
-      return pytz.utc.localize(datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ'))
-    except ValueError:
-      try:
-        return pytz.utc.localize(datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ'))
-      except ValueError:
-        try:
-          return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%f%z')
-        except ValueError:
-          return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S%z') 
-
-  # def add_sale(self, sale_amount, sale_timestamp):
-  #   held_days = (sale_timestamp - self.timestamp).total_seconds() / 60  / 60 / 24
-  #   self._sales.append([sale_amount, sale_timestamp, held_days])
-
-  # def average_days(self):
-  #   if self.type == 'sell': return 0
-  #   return int(sum(map(lambda x: x[2], self._sales)) / len(self._sales))
-
-  # def sale_profit(self):
-  #   if self.type == 'sell': return 0
-  #   return sum(map(lambda x: x[0], self._sales)) - self.total_price
-
-  # def total_profit_per_dollar(self):
-  #   if self.type == 'sell': return 0
-  #   return (self.sale_profit() + self.dividend_profit) / self.total_price
-
-  # def total_profit_per_dollar_per_day(self):
-  #   if self.type == 'sell': return 0
-  #   if self.average_days() < 1: return 0
-  #   return self.total_profit_per_dollar() / self.average_days()
-
-  # def last_sale_date(self):
-  #   if self.type == 'sell': return None
-  #   return max(map(lambda x: x[1], self._sales))
