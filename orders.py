@@ -7,42 +7,41 @@ import sqlite3
 from entities.execution import Execution
 
 def retrieve_all_orders():
-  orders = list(_load_stock_orders())
-  orders.extend(_load_crypto_orders())
-  orders.extend(_load_option_orders())
-  orders.sort(key=lambda x: x.timestamp, reverse=True)
-  buys = _associate_buys_and_sells(orders)
-  return buys
+  with sqlite3.connect('daylight.db') as db_conn:
+    db_conn.row_factory = sqlite3.Row
+    orders = list(_load_stock_orders(db_conn))
+    orders.extend(_load_crypto_orders())
+    orders.extend(_load_option_orders())
+    orders.sort(key=lambda x: x.timestamp, reverse=True)
+    buys = _associate_buys_and_sells(orders)
+    return buys
 
-def _load_stock_orders():
+def _load_stock_orders(db_conn):
   for order in robin_stocks.orders.get_all_orders():
     if order['state'] != 'filled':
       continue
-    instrument = None
-    with sqlite3.connect('daylight.db') as db_conn:
-      db_conn.row_factory = sqlite3.Row
-      instrument = _load_instrument(db_conn, order['instrument'])
+    symbol = _load_instrument_symbol(db_conn, order['instrument'])
     for execution in order['executions']:
       yield Execution(
         'stock',
         execution,
-        symbol=instrument['symbol'],
+        symbol=symbol,
         order_id=order['id'],
         transaction_type=order['side'],
-        instrument_url=order['instrument'],
+        instrument_id=order['instrument'],
         fees=float(order['fees']) / float(order['quantity']))
 
-def _load_instrument(db_conn, url):
+def _load_instrument_symbol(db_conn, instrument_id):
   cursor = db_conn.cursor()
   cursor.execute('CREATE TABLE IF NOT EXISTS Instruments(url TEXT PRIMARY KEY NOT NULL, symbol VARCHAR(5) NOT NULL)')
-  cursor.execute('SELECT symbol FROM Instruments WHERE url = "{}"'.format(url))
+  cursor.execute('SELECT symbol FROM Instruments WHERE url = "{}"'.format(instrument_id))
   result = cursor.fetchall()
   if result:
-    return result[0]
+    return result[0]['symbol']
   else:
-    instrument = robin_stocks.helper.request_get(url)
-    cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(url, instrument['symbol']))
-    return instrument
+    symbol = robin_stocks.helper.request_get(instrument_id)['symbol']
+    cursor.execute('INSERT INTO Instruments VALUES("{}", "{}")'.format(instrument_id, symbol))
+    return symbol
 
 def _load_crypto_orders():
   currency_pairs = {}
@@ -60,7 +59,6 @@ def _load_crypto_orders():
         execution, 
         symbol=currency_pairs[currency_pair_id], 
         order_id=order['id'],
-        instrument_url=currency_pair_id,
         transaction_type=order['side'])
 
 def _load_option_orders():
@@ -75,8 +73,7 @@ def _load_option_orders():
             execution,
             symbol=None,
             order_id=option['id'],
-            transaction_type=None, 
-            instrument_url=None)
+            transaction_type=None)
           # TODO: yield Execution.
           if False:
             yield None
@@ -109,7 +106,7 @@ def _associate_buys_and_sells(orders):
 class Dividend(object):
   def __init__(self, dividend_response):
     self.dividend_id = dividend_response['id']
-    self.instrument_url = dividend_response['instrument']
+    self.instrument_id = dividend_response['instrument']
     self.rate = float(dividend_response['rate'])
     self.quantity = float(dividend_response['position'])
     self.date = pytz.utc.localize(datetime.strptime(dividend_response['record_date'], '%Y-%m-%d'))
@@ -161,7 +158,7 @@ class Buy(object):
     Evaluates whether the given dividend is applicable for this Buy.
     If so, adds a copy of the dividend, and subtracts the used quantity from the given dividend.
     """
-    if dividend.quantity and self.execution.instrument_url == dividend.instrument_url and self.execution.timestamp < dividend.date:
+    if dividend.quantity and self.execution.instrument_id == dividend.instrument_id and self.execution.timestamp < dividend.date:
       prior_sales = filter(lambda s: s.timestamp < dividend.date, self._sales)
       buy_dividend_qty = self.execution.quantity - sum(map(lambda s: s.quantity, prior_sales))
       if buy_dividend_qty:  # Entire position was not [yet] sold prior to this dividend.
