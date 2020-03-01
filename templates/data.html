@@ -6,8 +6,9 @@
 <div id="data">
   <table class="striped">
     <tr>
-      <th scope="col">Date</th>
-      <th scope="col">Symbol</th>
+      <th>Date</th>
+      <th>Symbol</th>
+      <th>Instrument</th>
       <th>Quantity</th>
       <th>Share Price</th>
       <th>Total Price</th>
@@ -22,8 +23,9 @@
      {% for buy in transactions %}
       <tr>
         <td>{{ buy.execution.timestamp | format_date  }}</td>
-        <td class="text">{{ buy.execution.symbol or '' }}</td>
-        <td class="numeric">{{ buy.execution.quantity or '' }}</td>
+        <td class="text">{{ buy.execution.symbol }}</td>
+        <td class="text">{{ buy.execution.instrument_type }}</td>
+        <td class="numeric">{{ buy.execution.quantity }}</td>
         <td class="numeric">{{ buy.execution.share_price | format_currency}}</td>
         <td class="numeric">{{ buy.execution.total_price | format_currency}}</td>
         <td class="numeric">{{ buy.sale_fees() | format_currency}}</td>

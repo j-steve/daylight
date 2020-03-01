@@ -70,8 +70,10 @@ def _load_option_orders():
     for leg in option['legs']:
       for execution in leg['executions']:
         execution['quantity'] = float(execution['quantity']) * 100
+        if (leg['side'] == 'sell') != (leg['position_effect'] == 'close'): 
+          execution['price'] = 0 - float(execution['price'])
         yield Execution(
-          'option',
+          option['opening_strategy'],
           execution,
           symbol=option['chain_symbol'],
           order_id=option['id'],
