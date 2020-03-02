@@ -12,7 +12,7 @@ class Buy(object):
     self._dividends = []
     self._sales = []
 
-  def add_sale(self, sale):
+  def add_position_close(self, sale):
     """
     Associates a new Sale with this Buy.
     If the quantity sold exceeds the remaining unsold quantity for this Buy,

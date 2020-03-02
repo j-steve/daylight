@@ -62,7 +62,8 @@ def _load_crypto_orders():
         symbol=currency_pairs[currency_pair_id], 
         order_id=order['id'],
         buy_or_sell=order['side'],
-        is_position_close=order['side'] == 'sell')
+        is_position_close=order['side'] == 'sell',
+        instrument_id=currency_pair_id)
 
 def _load_option_orders():
   for option in robin_stocks.options.get_market_options():
@@ -87,15 +88,15 @@ def _associate_buys_and_sells(orders):
   sales = defaultdict(lambda: [])
   for execution in orders:
     print(execution.symbol, execution.buy_or_sell, execution.quantity)
-    symbol_sales = sales[execution.symbol]
+    symbol_sales = sales[execution.instrument_id]
     if execution.is_position_close:
       symbol_sales.append(Sale(execution))
     else:
       buy = Buy(execution)
-      symbol_sales = sales[buy.execution.symbol]
+      symbol_sales = sales[buy.execution.instrument_id]
       while buy.unsold_quantity and symbol_sales:
         sale = symbol_sales.pop(-1)
-        remaining_sale_portion = buy.add_sale(sale)
+        remaining_sale_portion = buy.add_position_close(sale)
         if remaining_sale_portion: symbol_sales.append(remaining_sale_portion)
       if buy.unsold_quantity:
         if execution.instrument_type == 'stock':
