@@ -8,6 +8,7 @@ class Dividend(object):
     self.instrument_id = dividend_response['instrument']
     self.rate = float(dividend_response['rate'])
     self.quantity = float(dividend_response['position'])
+    # TODO: The following localization assumes record_date is in UTC, which it is not.
     self.date = pytz.utc.localize(datetime.strptime(dividend_response['record_date'], '%Y-%m-%d'))
 
   @staticmethod
